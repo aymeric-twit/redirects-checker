@@ -5,7 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/boot.php';
 
 set_time_limit(0);
-ini_set('memory_limit', '256M');
+ini_set('memory_limit', '1G');
 
 $options = getopt('', ['job:']);
 $jobId = $options['job'] ?? null;

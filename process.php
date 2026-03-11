@@ -62,10 +62,10 @@ if (!empty($_FILES['fichier_csv']) && $_FILES['fichier_csv']['error'] === UPLOAD
         exit;
     }
 
-    $tailleMax = 5 * 1024 * 1024;
+    $tailleMax = 10 * 1024 * 1024;
     if ($fichier['size'] > $tailleMax) {
         http_response_code(400);
-        echo json_encode(['erreur' => 'Le fichier ne doit pas depasser 5 Mo.']);
+        echo json_encode(['erreur' => 'Le fichier ne doit pas depasser 10 Mo.']);
         exit;
     }
 
