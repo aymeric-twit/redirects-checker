@@ -55,16 +55,22 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
 <nav class="navbar mb-4">
     <div class="container-fluid">
         <span class="navbar-brand mb-0 h1">
-            <i class="bi bi-signpost-split"></i> Redirects Checker
-            <span class="d-block d-sm-inline ms-sm-2 text-light-muted">Resultats de l'analyse</span>
+            <i class="bi bi-signpost-split"></i> <span data-i18n="nav.titre">Redirects Checker</span>
+            <span class="d-block d-sm-inline ms-sm-2 text-light-muted" data-i18n="nav.sousTitreResultats">Resultats de l'analyse</span>
         </span>
+        <?php if (!defined('PLATFORM_EMBEDDED')): ?>
+        <select id="lang-select" class="form-select form-select-sm" style="width:auto; background-color:rgba(255,255,255,0.15); color:#fff; border-color:rgba(255,255,255,0.3); font-size:0.8rem;">
+            <option value="fr">FR</option>
+            <option value="en">EN</option>
+        </select>
+        <?php endif; ?>
     </div>
 </nav>
 
 <div class="container py-3">
 
     <!-- Lien retour -->
-    <a href="index.php" class="btn btn-outline-primary btn-sm mb-3" id="lienRetour">
+    <a href="index.php" class="btn btn-outline-primary btn-sm mb-3" id="lienRetour" data-i18n="btn.retour">
         <i class="bi bi-arrow-left me-1"></i>Nouvelle analyse
     </a>
 
@@ -79,7 +85,7 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
         ? "$verifiees / $totalUrls URLs verifiees"
         : 'Demarrage...';
 ?>
-            <h6 class="fw-bold mb-3"><i class="bi bi-hourglass-split me-2"></i>Verification HTTP en cours...</h6>
+            <h6 class="fw-bold mb-3" data-i18n="progress.titre"><i class="bi bi-hourglass-split me-2"></i>Verification HTTP en cours...</h6>
             <div class="progress mb-2" style="height: 24px;">
                 <div id="progressBar"
                      class="progress-bar progress-bar-teal progress-bar-striped progress-bar-animated"
@@ -97,31 +103,31 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
     <div class="row g-3 mb-4" id="resumeSection">
         <div class="col-6 col-lg">
             <div class="kpi-card">
-                <div class="kpi-label">Redirections 3xx</div>
+                <div class="kpi-label" data-i18n="kpi.redirections3xx">Redirections 3xx</div>
                 <div class="kpi-value" id="kpiTotal">-</div>
             </div>
         </div>
         <div class="col-6 col-lg">
             <div class="kpi-card" id="kpiChainesCard">
-                <div class="kpi-label">Chaines</div>
+                <div class="kpi-label" data-i18n="kpi.chaines">Chaines</div>
                 <div class="kpi-value" id="kpiChaines">-</div>
             </div>
         </div>
         <div class="col-6 col-lg">
             <div class="kpi-card" id="kpiBouclesCard">
-                <div class="kpi-label">Boucles</div>
+                <div class="kpi-label" data-i18n="kpi.boucles">Boucles</div>
                 <div class="kpi-value" id="kpiBoucles">-</div>
             </div>
         </div>
         <div class="col-6 col-lg">
             <div class="kpi-card" id="kpi404Card">
-                <div class="kpi-label">Erreurs HTTP</div>
+                <div class="kpi-label" data-i18n="kpi.erreursHttp">Erreurs HTTP</div>
                 <div class="kpi-value" id="kpi404">-</div>
             </div>
         </div>
         <div class="col-6 col-lg">
             <div class="kpi-card" id="kpiCorrectionsCard">
-                <div class="kpi-label">Corrections</div>
+                <div class="kpi-label" data-i18n="kpi.corrections">Corrections</div>
                 <div class="kpi-value" id="kpiCorrections">0</div>
             </div>
         </div>
@@ -130,17 +136,17 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
     <!-- Onglets resultats -->
     <ul class="nav nav-tabs mb-0" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-problemes" type="button" role="tab">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-problemes" type="button" role="tab" data-i18n="tab.problemes">
                 <i class="bi bi-exclamation-diamond me-1"></i>Problemes <span class="badge bg-danger ms-1" id="badgeProblemes">0</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-liste" type="button" role="tab">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-liste" type="button" role="tab" data-i18n="tab.listeComplete">
                 <i class="bi bi-list-ul me-1"></i>Liste complete
             </button>
         </li>
         <li class="nav-item d-none" role="presentation" id="tabAvertissementsItem">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-avertissements" type="button" role="tab">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-avertissements" type="button" role="tab" data-i18n="tab.avertissements">
                 <i class="bi bi-exclamation-triangle me-1"></i>Avertissements <span class="badge bg-warning text-dark ms-1" id="badgeAvertissements">0</span>
             </button>
         </li>
@@ -152,19 +158,19 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
             <div class="card shadow-sm border-top-0 rounded-top-0">
                 <div class="card-body">
                     <div class="mb-3 d-flex flex-wrap gap-2 align-items-center" id="filtresProblemes">
-                        <button class="btn btn-sm btn-outline-secondary active" data-filtre="tous">Tous</button>
-                        <button class="btn btn-sm btn-outline-warning" data-filtre="chaine"><i class="bi bi-link-45deg me-1"></i>Chaines</button>
-                        <button class="btn btn-sm btn-outline-danger" data-filtre="boucle"><i class="bi bi-arrow-repeat me-1"></i>Boucles</button>
-                        <button class="btn btn-sm btn-outline-danger" data-filtre="404"><i class="bi bi-x-circle me-1"></i>404</button>
-                        <button class="btn btn-sm btn-outline-danger" data-filtre="http-erreur"><i class="bi bi-exclamation-octagon me-1"></i>Erreur HTTP</button>
-                        <button class="btn btn-sm btn-outline-warning" data-filtre="auto"><i class="bi bi-arrow-return-right me-1"></i>Auto-redirect</button>
-                        <button class="btn btn-sm btn-outline-info" data-filtre="redirect"><i class="bi bi-shuffle me-1"></i>Redirect inattendue</button>
+                        <button class="btn btn-sm btn-outline-secondary active" data-filtre="tous" data-i18n="filtre.tous">Tous</button>
+                        <button class="btn btn-sm btn-outline-warning" data-filtre="chaine" data-i18n="filtre.chaines"><i class="bi bi-link-45deg me-1"></i>Chaines</button>
+                        <button class="btn btn-sm btn-outline-danger" data-filtre="boucle" data-i18n="filtre.boucles"><i class="bi bi-arrow-repeat me-1"></i>Boucles</button>
+                        <button class="btn btn-sm btn-outline-danger" data-filtre="404" data-i18n="filtre.404"><i class="bi bi-x-circle me-1"></i>404</button>
+                        <button class="btn btn-sm btn-outline-danger" data-filtre="http-erreur" data-i18n="filtre.httpErreur"><i class="bi bi-exclamation-octagon me-1"></i>Erreur HTTP</button>
+                        <button class="btn btn-sm btn-outline-warning" data-filtre="auto" data-i18n="filtre.auto"><i class="bi bi-arrow-return-right me-1"></i>Auto-redirect</button>
+                        <button class="btn btn-sm btn-outline-info" data-filtre="redirect" data-i18n="filtre.redirect"><i class="bi bi-shuffle me-1"></i>Redirect inattendue</button>
                         <div class="ms-auto">
-                            <input type="text" class="form-control form-control-sm" id="rechercheProblemes" placeholder="Rechercher..." style="width:200px">
+                            <input type="text" class="form-control form-control-sm" id="rechercheProblemes" data-i18n-placeholder="filtre.rechercher" placeholder="Rechercher..." style="width:200px">
                         </div>
                     </div>
                     <div class="mb-2">
-                        <button class="btn btn-sm btn-outline-success d-none" id="btnAppliquerTout">
+                        <button class="btn btn-sm btn-outline-success d-none" id="btnAppliquerTout" data-i18n="btn.appliquerTout">
                             <i class="bi bi-check2-all me-1"></i>Appliquer toutes les corrections
                         </button>
                     </div>
@@ -173,11 +179,11 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
                         <table class="table table-sm table-hover" id="tableProblemes">
                             <thead>
                                 <tr>
-                                    <th>Type</th>
-                                    <th class="sortable-th" data-col="1" data-type="str">Source</th>
-                                    <th>Destination actuelle</th>
-                                    <th>Detail</th>
-                                    <th>Destination corrigee</th>
+                                    <th data-i18n="table.type">Type</th>
+                                    <th class="sortable-th" data-col="1" data-type="str" data-i18n="table.source">Source</th>
+                                    <th data-i18n="table.destActuelle">Destination actuelle</th>
+                                    <th data-i18n="table.detail">Detail</th>
+                                    <th data-i18n="table.destCorrigee">Destination corrigee</th>
                                 </tr>
                             </thead>
                             <tbody id="bodyProblemes"></tbody>
@@ -186,7 +192,7 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
                     <nav class="bulk-pagination" id="pagination-tableProblemes">
                         <ul class="pagination pagination-sm justify-content-center mb-0"></ul>
                     </nav>
-                    <p id="aucunProbleme" class="text-muted text-center py-3 d-none">
+                    <p id="aucunProbleme" class="text-muted text-center py-3 d-none" data-i18n="table.aucunProbleme">
                         <i class="bi bi-check-circle text-success me-1"></i>Aucun probleme detecte.
                     </p>
                 </div>
@@ -198,7 +204,7 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
             <div class="card shadow-sm border-top-0 rounded-top-0">
                 <div class="card-body">
                     <div class="mb-3 d-flex align-items-center">
-                        <input type="text" class="form-control form-control-sm ms-auto" id="rechercheListe" placeholder="Rechercher..." style="width:200px">
+                        <input type="text" class="form-control form-control-sm ms-auto" id="rechercheListe" data-i18n-placeholder="filtre.rechercher" placeholder="Rechercher..." style="width:200px">
                     </div>
                     <div class="bulk-page-info mb-1" id="page-info-tableListe"></div>
                     <div class="table-responsive">
@@ -206,10 +212,10 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th class="sortable-th" data-col="1" data-type="str">Source</th>
-                                    <th>Destination</th>
-                                    <th>Statut</th>
-                                    <th>HTTP</th>
+                                    <th class="sortable-th" data-col="1" data-type="str" data-i18n="table.source">Source</th>
+                                    <th data-i18n="table.destination">Destination</th>
+                                    <th data-i18n="table.statut">Statut</th>
+                                    <th data-i18n="table.http">HTTP</th>
                                 </tr>
                             </thead>
                             <tbody id="bodyListe"></tbody>
@@ -232,7 +238,7 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
                             <thead>
                                 <tr>
                                     <th style="width:50px">#</th>
-                                    <th>Avertissement</th>
+                                    <th data-i18n="table.avertissement">Avertissement</th>
                                 </tr>
                             </thead>
                             <tbody id="bodyAvertissements"></tbody>
@@ -248,10 +254,10 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
 
     <!-- Boutons export -->
     <div class="mt-3 d-flex gap-2">
-        <button class="btn btn-primary" id="btnExportCorrige">
+        <button class="btn btn-primary" id="btnExportCorrige" data-i18n="btn.exportCorrections">
             <i class="bi bi-download me-1"></i>Exporter les corrections (CSV)
         </button>
-        <button class="btn btn-outline-secondary" id="btnExportProblemes">
+        <button class="btn btn-outline-secondary" id="btnExportProblemes" data-i18n="btn.exportProblemes">
             <i class="bi bi-download me-1"></i>Exporter les problemes (CSV)
         </button>
     </div>
@@ -268,6 +274,7 @@ $logOffsetInitial = file_exists($cheminLogs) ? filesize($cheminLogs) : 0;
     window.rcResultatsHttp = <?= $resultatsHttp ? json_encode($resultatsHttp, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : 'null' ?>;
     window.rcLogOffset = <?= $logOffsetInitial ?>;
 </script>
+<script src="translations.js"></script>
 <script src="app.js?v=<?= time() ?>"></script>
 </body>
 </html>

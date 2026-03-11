@@ -4,6 +4,56 @@
     var baseUrl = window.MODULE_BASE_URL || '.';
     var pollingTimer = null;
 
+    // --- i18n ---
+    var langueActuelle = (function () {
+        if (typeof window.PLATFORM_LANG === 'string' && window.PLATFORM_LANG) return window.PLATFORM_LANG;
+        try { var p = new URLSearchParams(window.location.search).get('lg'); if (p) return p; } catch (_) {}
+        try { var s = localStorage.getItem('lang'); if (s) return s; } catch (_) {}
+        return 'fr';
+    })();
+
+    function t(cle, params) {
+        var trad = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[langueActuelle] && TRANSLATIONS[langueActuelle][cle])
+            ? TRANSLATIONS[langueActuelle][cle]
+            : (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS.fr && TRANSLATIONS.fr[cle])
+                ? TRANSLATIONS.fr[cle]
+                : cle;
+        if (params) {
+            Object.keys(params).forEach(function (k) {
+                trad = trad.replace(new RegExp('\\{' + k + '\\}', 'g'), params[k]);
+            });
+        }
+        return trad;
+    }
+
+    function traduirePage() {
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+            el.innerHTML = t(el.getAttribute('data-i18n'));
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+            el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+        });
+    }
+
+    function changerLangue(lng) {
+        langueActuelle = lng;
+        try { localStorage.setItem('lang', lng); } catch (_) {}
+        traduirePage();
+    }
+
+    function initLangueSelect() {
+        var select = document.getElementById('lang-select');
+        if (!select) return;
+        select.value = langueActuelle;
+        select.addEventListener('change', function () { changerLangue(this.value); });
+    }
+
+    if (typeof window !== 'undefined') {
+        window.addEventListener('platformLangChange', function (e) {
+            if (e.detail && e.detail.lang) changerLangue(e.detail.lang);
+        });
+    }
+
     // -- Variables d'etat (results.php) — declarees ici pour eviter le hoisting undefined --
     var analyse = null;
     var resultatsHttp = null;
@@ -25,6 +75,10 @@
     if (jobId) {
         initResultats();
     }
+
+    // Traduire la page au chargement
+    traduirePage();
+    initLangueSelect();
 
     // ===========================================
     // FORMULAIRE (index.php)
@@ -73,7 +127,7 @@
             infoDiv.classList.remove('d-none');
             infoDiv.innerHTML = '<div class="alert alert-info py-2 mb-0 d-flex align-items-center gap-2">'
                 + '<span class="spinner-border spinner-border-sm"></span>'
-                + '<span><strong>' + escapeHtml(fichier.name) + '</strong> (' + tailleTexte + ') — Lecture du fichier...</span>'
+                + '<span><strong>' + escapeHtml(fichier.name) + '</strong> (' + tailleTexte + ') — ' + t('msg.fichierLecture') + '</span>'
                 + '</div>';
 
             var reader = new FileReader();
@@ -84,12 +138,12 @@
                 infoDiv.innerHTML = '<div class="alert alert-success py-2 mb-0">'
                     + '<i class="bi bi-check-circle me-1"></i>'
                     + '<strong>' + escapeHtml(fichier.name) + '</strong> — '
-                    + tailleTexte + ' — ~' + formaterNombre(nbLignes) + ' lignes'
+                    + tailleTexte + ' — ~' + formaterNombre(nbLignes) + ' ' + t('msg.fichierLignes')
                     + '</div>';
             };
             reader.onerror = function () {
                 infoDiv.innerHTML = '<div class="alert alert-danger py-2 mb-0">'
-                    + '<i class="bi bi-x-circle me-1"></i>Impossible de lire le fichier.'
+                    + '<i class="bi bi-x-circle me-1"></i>' + t('msg.erreurLectureFichier')
                     + '</div>';
             };
             reader.readAsText(fichier);
@@ -145,11 +199,11 @@
                     var job = jobs[i];
                     var badge = '';
                     if (job.statut === 'termine') {
-                        badge = '<span class="badge bg-success">Termine</span>';
+                        badge = '<span class="badge bg-success">' + t('historique.termine') + '</span>';
                     } else if (job.statut === 'erreur') {
-                        badge = '<span class="badge bg-danger">Erreur</span>';
+                        badge = '<span class="badge bg-danger">' + t('historique.erreur') + '</span>';
                     } else {
-                        badge = '<span class="badge bg-warning text-dark"><span class="spinner-border spinner-border-sm me-1" style="width:.7rem;height:.7rem"></span>En cours</span>';
+                        badge = '<span class="badge bg-warning text-dark"><span class="spinner-border spinner-border-sm me-1" style="width:.7rem;height:.7rem"></span>' + t('historique.enCours') + '</span>';
                     }
                     var domaine = job.domaine ? escapeHtml(job.domaine) : '<span class="text-muted">\u2014</span>';
                     var lien = baseUrl + '/results.php?job=' + encodeURIComponent(job.jobId);
@@ -162,7 +216,7 @@
                         + '<td class="text-center">' + formaterNombre(job.totalPaires) + '</td>'
                         + '<td class="text-center small">' + crawlees + '</td>'
                         + '<td>' + badge + '</td>'
-                        + '<td><a href="' + escapeHtml(lien) + '" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Voir</a></td>'
+                        + '<td><a href="' + escapeHtml(lien) + '" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>' + t('historique.voir') + '</a></td>'
                         + '</tr>';
                 }
                 tbody.innerHTML = html;
@@ -206,7 +260,7 @@
             rendrePageHistorique();
         })
         .catch(function () {
-            if (chargement) chargement.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Erreur de chargement.</span>';
+            if (chargement) chargement.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>' + t('historique.erreurChargement') + '</span>';
         });
     }
 
@@ -240,7 +294,7 @@
             return r.json();
         })
         .then(function () { callback(null); })
-        .catch(function (err) { callback(err && err.erreur ? err.erreur : 'Erreur de sauvegarde'); });
+        .catch(function (err) { callback(err && err.erreur ? err.erreur : t('msg.erreurAnalyse')); });
     }
 
     function supprimerConfig(nom, callback) {
@@ -251,7 +305,7 @@
         })
         .then(function (r) { return r.json(); })
         .then(function () { callback(null); })
-        .catch(function () { callback('Erreur de suppression'); });
+        .catch(function () { callback(t('msg.erreurAnalyse')); });
     }
 
     function lireValeursFormulaire() {
@@ -278,7 +332,7 @@
     function rafraichirSelectConfigs(configs) {
         var select = document.getElementById('selectConfig');
         if (!select) return;
-        select.innerHTML = '<option value="">-- Configs sauvegardees --</option>';
+        select.innerHTML = '<option value="">' + t('form.configsSauvegardees') + '</option>';
         (configs || []).forEach(function (c) {
             var opt = document.createElement('option');
             opt.value = c.nom;
@@ -318,7 +372,7 @@
                     rafraichirSelectConfigs(configs);
                     selectConfig.value = nom;
                 });
-                afficherToast('Config "' + nom + '" sauvegardee.');
+                afficherToast(t('msg.configSauvegardee', { nom: nom }));
             });
         });
 
@@ -332,7 +386,7 @@
             if (collapse && !collapse.classList.contains('show')) {
                 new bootstrap.Collapse(collapse, { toggle: true });
             }
-            afficherToast('Config "' + nom + '" chargee.');
+            afficherToast(t('msg.configChargee', { nom: nom }));
         });
 
         btnSupprimer.addEventListener('click', function () {
@@ -345,7 +399,7 @@
                 chargerConfigs(function (configs) {
                     rafraichirSelectConfigs(configs);
                 });
-                afficherToast('Config "' + nom + '" supprimee.');
+                afficherToast(t('msg.configSupprimee', { nom: nom }));
             });
         });
     }
@@ -395,16 +449,16 @@
         if (inputFichier && inputFichier.files && inputFichier.files[0] && !fichierContenu) {
             var btn = document.getElementById('submitBtn');
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Lecture du fichier\u2026';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> ' + t('msg.lectureFichier');
             var reader = new FileReader();
             reader.onload = function (e) {
                 fichierContenu = e.target.result;
                 soumettreAnalyse();
             };
             reader.onerror = function () {
-                afficherStatus('Impossible de lire le fichier.', 'error');
+                afficherStatus(t('msg.erreurLectureFichier'), 'error');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Analyser les redirections';
+                btn.innerHTML = t('form.analyser');
             };
             reader.readAsText(inputFichier.files[0]);
             return;
@@ -459,8 +513,8 @@
     function envoyerFormulaire() {
         var btn = document.getElementById('submitBtn');
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Envoi en cours\u2026';
-        afficherStatus('Envoi des donnees...', 'upload', 0);
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> ' + t('msg.envoiEnCours');
+        afficherStatus(t('msg.envoiDonnees'), 'upload', 0);
 
         var formData = new FormData(formulaire);
 
@@ -487,10 +541,10 @@
         xhr.upload.addEventListener('progress', function (e) {
             if (e.lengthComputable) {
                 var pct = Math.round((e.loaded / e.total) * 100);
-                afficherStatus('Envoi du fichier... ' + pct + '%', 'upload', pct);
+                afficherStatus(t('msg.envoiFichier', { pct: pct }), 'upload', pct);
                 if (pct >= 100) {
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analyse en cours\u2026';
-                    afficherStatus('Analyse des redirections...', 'loading');
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> ' + t('msg.analyseRedirections');
+                    afficherStatus(t('msg.analyseEnCours'), 'loading');
                 }
             }
         });
@@ -502,17 +556,17 @@
             if (xhr.status >= 200 && xhr.status < 300 && data && data.jobId) {
                 window.location.href = baseUrl + '/results.php?job=' + encodeURIComponent(data.jobId);
             } else {
-                var msg = (data && data.erreur) ? data.erreur : 'Erreur lors de l\'analyse.';
+                var msg = (data && data.erreur) ? data.erreur : t('msg.erreurAnalyse');
                 afficherStatus(msg, 'error');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Analyser les redirections';
+                btn.innerHTML = t('form.analyser');
             }
         });
 
         xhr.addEventListener('error', function () {
-            afficherStatus('Erreur reseau lors de l\'envoi.', 'error');
+            afficherStatus(t('msg.erreurReseau'), 'error');
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Analyser les redirections';
+            btn.innerHTML = t('form.analyser');
         });
 
         xhr.send(formData);
@@ -746,7 +800,7 @@
                     correction: destinationFinale,
                     classeType: 'badge-chaine',
                     classeLigne: 'ligne-chaine',
-                    labelType: 'Chaine',
+                    labelType: t('status.chaine'),
                 });
             }
         });
@@ -761,7 +815,7 @@
                 correction: '',
                 classeType: 'badge-boucle',
                 classeLigne: 'ligne-boucle',
-                labelType: 'Boucle',
+                labelType: t('status.boucle'),
             });
         });
 
@@ -771,11 +825,11 @@
                 type: 'auto',
                 source: url,
                 destination: url,
-                detail: 'Source = Destination',
+                detail: t('msg.sourceEgalDest'),
                 correction: '',
                 classeType: 'badge-auto',
                 classeLigne: 'ligne-auto',
-                labelType: 'Auto',
+                labelType: t('status.auto'),
             });
         });
 
@@ -822,9 +876,9 @@
     function rendreLineProbleme(l) {
         var correctionVal = corrections[l.source] || l.correction;
         var correctionHtml = l.type === 'boucle'
-            ? '<span class="text-muted fst-italic">A resoudre manuellement</span>'
+            ? '<span class="text-muted fst-italic">' + t('msg.aResoudreManuellement') + '</span>'
             : '<span class="cellule-editable url-cell" data-source="' + escapeAttr(l.source) + '" data-original="' + escapeAttr(l.correction) + '">'
-              + escapeHtml(correctionVal || 'Cliquer pour corriger')
+              + escapeHtml(correctionVal || t('msg.cliquerPourCorriger'))
               + '</span>';
 
         return '<tr class="' + l.classeLigne + '" data-type="' + l.type + '">'
@@ -857,7 +911,7 @@
         });
         rendreTableProblemes();
         mettreAJourKpiCorrections();
-        afficherToast(nbAppliquees + ' correction(s) appliquee(s).');
+        afficherToast(t('msg.correctionsAppliquees', { nb: nbAppliquees }));
     }
 
     function compterCorrections() {
@@ -899,7 +953,7 @@
                 if (dejaAjoute[cle]) return;
                 dejaAjoute[cle] = true;
 
-                var label = statut ? ('HTTP ' + statut) : 'Erreur';
+                var label = statut ? ('HTTP ' + statut) : t('status.erreur');
                 var detail = statut ? ('HTTP ' + statut + ' - ' + descriptionCodeHttp(statut)) : verif.erreur;
 
                 var type = statut === 404 ? '404' : 'http-erreur';
@@ -923,11 +977,11 @@
                     type: 'redirect',
                     source: p.source,
                     destination: p.destination,
-                    detail: 'URL finale : ' + verif.urlFinale + ' (attendue : ' + destinationAttendue + ')',
+                    detail: t('msg.urlFinale', { urlFinale: verif.urlFinale, attendue: destinationAttendue }),
                     correction: verif.urlFinale,
                     classeType: 'badge-redirect',
                     classeLigne: 'ligne-redirect',
-                    labelType: 'Redirect',
+                    labelType: t('status.redirect'),
                 });
             }
 
@@ -938,11 +992,11 @@
                     type: 'http-erreur',
                     source: p.source,
                     destination: p.destination,
-                    detail: 'La source repond 200 sans rediriger (redirection non configuree)',
+                    detail: t('msg.pasDeRedirection'),
                     correction: '',
                     classeType: 'badge-http-erreur',
                     classeLigne: 'ligne-http-erreur',
-                    labelType: 'Pas de redir',
+                    labelType: t('status.pasDeRedir'),
                 });
             }
         });
@@ -956,7 +1010,7 @@
             500: 'Internal Server Error', 502: 'Bad Gateway',
             503: 'Service Unavailable', 504: 'Gateway Timeout'
         };
-        return descriptions[code] || (code >= 500 ? 'Erreur serveur' : 'Erreur client');
+        return descriptions[code] || (code >= 500 ? 'Server Error' : 'Client Error');
     }
 
     function rendreTableProblemes() {
@@ -983,7 +1037,7 @@
         var input = document.createElement('input');
         input.type = 'text';
         input.value = valeurActuelle;
-        input.placeholder = 'Nouvelle destination';
+        input.placeholder = t('msg.nouvelleDest');
         cellule.innerHTML = '';
         cellule.appendChild(input);
         input.focus();
@@ -998,7 +1052,7 @@
             }
             cellule.classList.remove('cellule-en-edition');
             cellule.classList.add('cellule-editable');
-            cellule.textContent = nouvelleValeur || cellule.getAttribute('data-original') || 'Cliquer pour corriger';
+            cellule.textContent = nouvelleValeur || cellule.getAttribute('data-original') || t('msg.cliquerPourCorriger');
             mettreAJourKpiCorrections();
         }
 
@@ -1008,7 +1062,7 @@
             if (e.key === 'Escape') {
                 cellule.classList.remove('cellule-en-edition');
                 cellule.classList.add('cellule-editable');
-                cellule.textContent = corrections[source] || cellule.getAttribute('data-original') || 'Cliquer pour corriger';
+                cellule.textContent = corrections[source] || cellule.getAttribute('data-original') || t('msg.cliquerPourCorriger');
             }
         });
     }
@@ -1018,15 +1072,15 @@
     function rendreLigneListe(p, i) {
         var aplati = analyse.aplati || {};
         var info = aplati[p.source] || {};
-        var statut = 'OK';
+        var statut = t('status.ok');
         var classeStatut = 'badge-ok';
 
         if (info.estBoucle) {
-            statut = 'Boucle'; classeStatut = 'badge-boucle';
+            statut = t('status.boucle'); classeStatut = 'badge-boucle';
         } else if (p.source === p.destination) {
-            statut = 'Auto'; classeStatut = 'badge-auto';
+            statut = t('status.auto'); classeStatut = 'badge-auto';
         } else if (info.destination && info.destination !== p.destination) {
-            statut = 'Chaine'; classeStatut = 'badge-chaine';
+            statut = t('status.chaine'); classeStatut = 'badge-chaine';
         }
 
         var httpBadge = '';
@@ -1047,14 +1101,14 @@
             if (verif.urlFinale) {
                 if (verif.urlFinale !== destinationAttendue) {
                     urlFinaleInfo = ' <i class="bi bi-arrow-right-short"></i><span class="url-cell text-warning" title="' + escapeAttr(verif.urlFinale) + '">' + escapeHtml(tronquer(verif.urlFinale, 50)) + '</span>';
-                    if (statut === 'OK') { statut = 'Redirect'; classeStatut = 'badge-redirect'; }
+                    if (statut === t('status.ok')) { statut = t('status.redirect'); classeStatut = 'badge-redirect'; }
                 }
-            } else if (code === 200 && statut === 'OK') {
-                statut = 'Pas de redir';
+            } else if (code === 200 && statut === t('status.ok')) {
+                statut = t('status.pasDeRedir');
                 classeStatut = 'badge-http-erreur';
             }
-        } else if (window.rcVerifier404 && window.rcEstTermine && statut === 'OK') {
-            statut = 'Non verifie';
+        } else if (window.rcVerifier404 && window.rcEstTermine && statut === t('status.ok')) {
+            statut = t('status.nonVerifie');
             classeStatut = 'badge-non-verifie';
         }
 
@@ -1165,7 +1219,7 @@
             if (data.status === 'error') {
                 clearInterval(pollingTimer);
                 document.getElementById('progressSection').innerHTML =
-                    '<div class="card-body"><div class="alert alert-danger mb-0">' + escapeHtml(data.message || 'Erreur worker') + '</div></div>';
+                    '<div class="card-body"><div class="alert alert-danger mb-0">' + escapeHtml(data.message || t('msg.erreurWorker')) + '</div></div>';
                 return;
             }
             mettreAJourProgression(data);
@@ -1218,7 +1272,7 @@
         var text = document.getElementById('progressText');
         if (bar) bar.style.width = pct + '%';
         if (pctLabel) pctLabel.textContent = pct > 0 ? pct + '%' : '';
-        if (text) text.textContent = (data.verifiees || 0) + ' / ' + (data.total || 0) + ' URLs verifiees';
+        if (text) text.textContent = t('progress.urlsVerifiees', { verifiees: data.verifiees || 0, total: data.total || 0 });
     }
 
     function chargerResultatsHttp() {
@@ -1286,7 +1340,7 @@
         .catch(function (err) {
             console.error('[RedirectsChecker] Erreur chargerResultatsHttp:', err);
             document.getElementById('progressSection').innerHTML =
-                '<div class="card-body"><div class="alert alert-danger mb-0">Impossible de charger les resultats HTTP : ' + escapeHtml(String(err)) + '</div></div>';
+                '<div class="card-body"><div class="alert alert-danger mb-0">' + t('msg.erreurChargementHttp') + escapeHtml(String(err)) + '</div></div>';
         });
     }
 
@@ -1313,7 +1367,7 @@
         var sep = ';';
 
         if (type === 'problemes') {
-            lignes.push(['Type', 'Source', 'Destination actuelle', 'Detail', 'Correction'].join(sep));
+            lignes.push([t('csv.type'), t('csv.source'), t('csv.destActuelle'), t('csv.detail'), t('csv.correction')].join(sep));
 
             (window._problemesData || []).forEach(function (p) {
                 var corr = corrections[p.source] || p.correction || '';
@@ -1326,7 +1380,7 @@
                 ].join(sep));
             });
         } else {
-            lignes.push(['Source', 'Destination originale', 'Destination corrigee', 'Raison'].join(sep));
+            lignes.push([t('csv.source'), t('csv.destOriginale'), t('csv.destCorrigee'), t('csv.raison')].join(sep));
 
             var aplati = analyse.aplati || {};
 
@@ -1338,25 +1392,25 @@
                 var raisons = [];
 
                 // Problemes de graphe
-                if (info.estBoucle) raisons.push('Boucle');
-                if (p.source === p.destination) raisons.push('Auto-redirection');
-                if (dest !== p.destination && !info.estBoucle) raisons.push('Chaine aplatie');
+                if (info.estBoucle) raisons.push(t('status.boucle'));
+                if (p.source === p.destination) raisons.push(t('msg.autoRedirection'));
+                if (dest !== p.destination && !info.estBoucle) raisons.push(t('msg.chaineAplatie'));
 
                 // Problemes HTTP
                 var verif = chercherVerifHttp(p.source);
                 if (verif) {
                     if (verif.statut && verif.statut >= 400) raisons.push('HTTP ' + verif.statut);
-                    if (verif.erreur) raisons.push('Erreur connexion');
+                    if (verif.erreur) raisons.push(t('msg.erreurConnexion'));
                     var destinationAttendue = resoudreDestination(p.destination);
                     if (verif.urlFinale && verif.urlFinale !== destinationAttendue) {
-                        raisons.push('Redirect inattendue vers ' + verif.urlFinale);
+                        raisons.push(t('msg.redirectInattendue', { url: verif.urlFinale }));
                     }
                     if (!verif.urlFinale && verif.statut === 200) {
-                        raisons.push('Pas de redirection');
+                        raisons.push(t('msg.pasDeRedirectionCourt'));
                     }
                 }
 
-                var raison = raisons.length > 0 ? raisons.join(' | ') : 'Inchange';
+                var raison = raisons.length > 0 ? raisons.join(' | ') : t('msg.inchange');
 
                 lignes.push([
                     csvEchapper(p.source),
@@ -1375,7 +1429,7 @@
         a.download = 'redirections-' + type + '.csv';
         a.click();
         URL.revokeObjectURL(url);
-        afficherToast('Fichier CSV telecharge.');
+        afficherToast(t('msg.csvTelecharge'));
     }
 
     // ===========================================
@@ -1435,8 +1489,8 @@
 
             if (info) {
                 info.textContent = total > 0
-                    ? (start + 1) + ' – ' + end + ' sur ' + formaterNombre(total)
-                    : 'Aucun resultat';
+                    ? t('msg.surTotal', { debut: start + 1, fin: end, total: formaterNombre(total) })
+                    : t('msg.aucunResultat');
             }
             buildNav(totalPages);
         }
