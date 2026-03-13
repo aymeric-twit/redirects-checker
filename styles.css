@@ -336,6 +336,79 @@ body {
 .bulk-pagination .page-link:hover { background-color: #f1f5f9; color: #0f172a; }
 .bulk-page-info { font-size: 0.78rem; color: #64748b; }
 
+/* ---------- Help panel ---------- */
+.config-help-panel {
+    background: var(--brand-teal-light);
+    border-left: 3px solid var(--brand-gold);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    position: relative;
+    max-height: 5.5rem;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+.config-help-panel::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3rem;
+    background: linear-gradient(transparent, var(--brand-teal-light));
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.config-help-panel.expanded {
+    max-height: 2000px;
+}
+.config-help-panel.expanded::after {
+    opacity: 0;
+}
+.config-help-panel ul {
+    padding-left: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+.config-help-panel li {
+    margin-bottom: 0.35rem;
+}
+.config-help-panel hr {
+    border-color: rgba(0, 76, 76, 0.1);
+    margin: 0.75rem 0;
+}
+.help-title {
+    font-weight: 600;
+    color: var(--brand-dark);
+    font-size: 0.9rem;
+}
+.help-title[role="button"] {
+    cursor: pointer;
+}
+.help-title[role="button"]:hover {
+    color: var(--brand-teal);
+}
+.help-chevron {
+    font-size: 0.7rem;
+    transition: transform 0.3s;
+}
+.help-title[aria-expanded="true"] .help-chevron {
+    transform: rotate(180deg);
+}
+.help-toggle-btn {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 1rem;
+    font-size: 0.75rem;
+    color: var(--brand-dark);
+    cursor: pointer;
+    z-index: 2;
+    font-weight: 600;
+}
+.help-toggle-btn:hover {
+    color: var(--brand-teal);
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
     .url-cell { max-width: 180px; }

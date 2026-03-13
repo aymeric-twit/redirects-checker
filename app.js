@@ -98,6 +98,7 @@
         initGestionConfigs();
         initFichierInfo();
         initHistorique();
+        initHelpPanel();
     }
 
     // -- Feedback visuel a la selection du fichier --
@@ -404,6 +405,24 @@
         });
     }
 
+    // -- Help panel expand/collapse --
+
+    function initHelpPanel() {
+        var panel = document.querySelector('.config-help-panel');
+        var btn = panel ? panel.querySelector('.help-toggle-btn') : null;
+        if (panel && btn) {
+            btn.addEventListener('click', function () {
+                panel.classList.toggle('expanded');
+                btn.textContent = panel.classList.contains('expanded') ? '\u25B2 ' + t('help.reduire') : '\u25BC ' + t('help.voirPlus');
+            });
+        }
+    }
+
+    function collapserHelpPanel() {
+        var panel = document.getElementById('helpPanel');
+        if (panel) panel.style.display = 'none';
+    }
+
     var USER_AGENTS = {
         'custom': '',
         'googlebot': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
@@ -515,6 +534,7 @@
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> ' + t('msg.envoiEnCours');
         afficherStatus(t('msg.envoiDonnees'), 'upload', 0);
+        collapserHelpPanel();
 
         var formData = new FormData(formulaire);
 

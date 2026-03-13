@@ -169,6 +169,26 @@ var TRANSLATIONS = {
         'csv.destOriginale':        'Destination originale',
         'csv.destCorrigee':         'Destination corrigee',
         'csv.raison':               'Raison',
+
+        // -- Help panel --
+        'help.titre_comment':       '<i class="bi bi-info-circle me-1"></i> Comment ca marche',
+        'help.etape1':              '<strong>1.</strong> Collez vos redirections (source \u2192 destination) ou importez un fichier CSV/TSV.',
+        'help.etape2':              '<strong>2.</strong> Cochez <em>Verifier les 404</em> pour crawler les URLs et verifier les codes HTTP reels.',
+        'help.etape3':              '<strong>3.</strong> Cliquez sur <em>Analyser</em>. L\u2019outil detecte chaines, boucles, 404 et redirections inattendues.',
+        'help.etape4':              '<strong>4.</strong> Corrigez les destinations et exportez le CSV corrige.',
+        'help.titre_fonctionnalites': '<i class="bi bi-lightbulb me-1"></i> Fonctionnalites <i class="bi bi-chevron-down help-chevron ms-1"></i>',
+        'help.fonc_chaines':        'Detection des chaines de redirections (A \u2192 B \u2192 C) avec aplatissement automatique.',
+        'help.fonc_boucles':        'Detection des boucles infinies et auto-redirections.',
+        'help.fonc_http':           'Verification HTTP concurrente (HEAD + fallback GET) avec codes source et destination.',
+        'help.fonc_crawler':        'Crawler configurable : concurrence, delai, timeout, User-Agent, headers custom.',
+        'help.fonc_export':         'Export CSV des corrections et des problemes.',
+        'help.fonc_configs':        'Sauvegarde des presets de configuration du crawler.',
+        'help.titre_limites':       '<i class="bi bi-speedometer2 me-1"></i> Limites',
+        'help.limite_fichier':      'Fichier max : <strong>5 Mo</strong> (~100 000 redirections)',
+        'help.limite_historique':   'Historique conserve <strong>72 heures</strong>',
+        'help.limite_configs':      'Jusqu\u2019a <strong>50 configs</strong> sauvegardees',
+        'help.voirPlus':            'Voir plus',
+        'help.reduire':             'Reduire',
     },
 
     en: {
@@ -341,5 +361,25 @@ var TRANSLATIONS = {
         'csv.destOriginale':        'Original destination',
         'csv.destCorrigee':         'Corrected destination',
         'csv.raison':               'Reason',
+
+        // -- Help panel --
+        'help.titre_comment':       '<i class="bi bi-info-circle me-1"></i> How it works',
+        'help.etape1':              '<strong>1.</strong> Paste your redirections (source \u2192 destination) or upload a CSV/TSV file.',
+        'help.etape2':              '<strong>2.</strong> Check <em>Verify 404s</em> to crawl URLs and verify actual HTTP codes.',
+        'help.etape3':              '<strong>3.</strong> Click <em>Analyze</em>. The tool detects chains, loops, 404s and unexpected redirects.',
+        'help.etape4':              '<strong>4.</strong> Fix destinations and export the corrected CSV.',
+        'help.titre_fonctionnalites': '<i class="bi bi-lightbulb me-1"></i> Features <i class="bi bi-chevron-down help-chevron ms-1"></i>',
+        'help.fonc_chaines':        'Redirect chain detection (A \u2192 B \u2192 C) with automatic flattening.',
+        'help.fonc_boucles':        'Infinite loop and self-redirect detection.',
+        'help.fonc_http':           'Concurrent HTTP verification (HEAD + GET fallback) with source and destination codes.',
+        'help.fonc_crawler':        'Configurable crawler: concurrency, delay, timeout, User-Agent, custom headers.',
+        'help.fonc_export':         'CSV export for corrections and issues.',
+        'help.fonc_configs':        'Save crawler configuration presets.',
+        'help.titre_limites':       '<i class="bi bi-speedometer2 me-1"></i> Limits',
+        'help.limite_fichier':      'Max file: <strong>5 MB</strong> (~100,000 redirections)',
+        'help.limite_historique':   'History kept for <strong>72 hours</strong>',
+        'help.limite_configs':      'Up to <strong>50 saved configs</strong>',
+        'help.voirPlus':            'Show more',
+        'help.reduire':             'Show less',
     }
 };

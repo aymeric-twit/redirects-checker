@@ -69,6 +69,8 @@ if (!file_exists($dataHtaccess)) {
 
     <div class="tab-content">
     <div class="tab-pane fade show active" id="pane-nouvelle" role="tabpanel">
+    <div class="row">
+    <div class="col-lg-8">
     <div class="card shadow-sm mb-4 border-top-0 rounded-top-0">
         <div class="card-header">
             <h5 class="mb-0 fw-bold" data-i18n="form.titreImport"><i class="bi bi-upload me-2"></i>Importer les redirections</h5>
@@ -240,6 +242,46 @@ if (!file_exists($dataHtaccess)) {
             </form>
         </div>
     </div>
+    </div><!-- /col-lg-8 formulaire -->
+
+    <div class="col-lg-4" id="helpPanel">
+        <div class="config-help-panel">
+            <div class="help-title mb-2" data-i18n="help.titre_comment">
+                <i class="bi bi-info-circle me-1"></i> Comment ca marche
+            </div>
+            <ul>
+                <li data-i18n="help.etape1"><strong>1.</strong> Collez vos redirections (source → destination) ou importez un fichier CSV/TSV.</li>
+                <li data-i18n="help.etape2"><strong>2.</strong> Cochez <em>Verifier les 404</em> pour crawler les URLs et verifier les codes HTTP reels.</li>
+                <li data-i18n="help.etape3"><strong>3.</strong> Cliquez sur <em>Analyser</em>. L'outil detecte chaines, boucles, 404 et redirections inattendues.</li>
+                <li data-i18n="help.etape4"><strong>4.</strong> Corrigez les destinations et exportez le CSV corrige.</li>
+            </ul>
+            <hr>
+            <div class="help-title mb-0" role="button" data-bs-toggle="collapse" data-bs-target="#helpFonctionnalites" aria-expanded="false" data-i18n="help.titre_fonctionnalites">
+                <i class="bi bi-lightbulb me-1"></i> Fonctionnalites <i class="bi bi-chevron-down help-chevron ms-1"></i>
+            </div>
+            <div class="collapse" id="helpFonctionnalites">
+                <ul class="mt-2">
+                    <li data-i18n="help.fonc_chaines">Detection des chaines de redirections (A &rarr; B &rarr; C) avec aplatissement automatique.</li>
+                    <li data-i18n="help.fonc_boucles">Detection des boucles infinies et auto-redirections.</li>
+                    <li data-i18n="help.fonc_http">Verification HTTP concurrente (HEAD + fallback GET) avec codes source et destination.</li>
+                    <li data-i18n="help.fonc_crawler">Crawler configurable : concurrence, delai, timeout, User-Agent, headers custom.</li>
+                    <li data-i18n="help.fonc_export">Export CSV des corrections et des problemes.</li>
+                    <li data-i18n="help.fonc_configs">Sauvegarde des presets de configuration du crawler.</li>
+                </ul>
+            </div>
+            <hr>
+            <div class="help-title mb-2" data-i18n="help.titre_limites">
+                <i class="bi bi-speedometer2 me-1"></i> Limites
+            </div>
+            <ul class="mb-0">
+                <li data-i18n="help.limite_fichier">Fichier max : <strong>5 Mo</strong> (~100 000 redirections)</li>
+                <li data-i18n="help.limite_historique">Historique conserve <strong>72 heures</strong></li>
+                <li data-i18n="help.limite_configs">Jusqu'a <strong>50 configs</strong> sauvegardees</li>
+            </ul>
+            <span class="help-toggle-btn">&#x25BC; Voir plus</span>
+        </div>
+    </div><!-- /col-lg-4 helpPanel -->
+    </div><!-- /row -->
     </div><!-- /pane-nouvelle -->
 
     <div class="tab-pane fade" id="pane-historique" role="tabpanel">
