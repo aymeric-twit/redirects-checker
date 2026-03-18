@@ -278,7 +278,6 @@ if (!file_exists($dataHtaccess)) {
                 <li data-i18n="help.limite_historique">Historique conserve <strong>72 heures</strong></li>
                 <li data-i18n="help.limite_configs">Jusqu'a <strong>50 configs</strong> sauvegardees</li>
             </ul>
-            <span class="help-toggle-btn">&#x25BC; Voir plus</span>
         </div>
     </div><!-- /col-lg-4 helpPanel -->
     </div><!-- /row -->

@@ -32,6 +32,29 @@ class VerificateurHttp
         int $delaiMs = 0,
         array $headersSupplementaires = [],
     ) {
+        // Mode plateforme : lire la configuration centralisee
+        if (defined('PLATFORM_EMBEDDED') && class_exists(\Platform\Http\HttpConfig::class)) {
+            try {
+                $config = \Platform\Http\HttpConfig::charger();
+                $userAgent = $config->webUserAgent;
+                $timeout = $config->webTimeout;
+                $sslVerify = $config->webSslVerify;
+                $proxy = ($config->proxyEnabled && $config->proxyWeb && $config->proxyUrl !== '')
+                    ? $config->proxyUrl
+                    : null;
+                $proxyAuth = $config->proxyAuth;
+            } catch (\Throwable) {
+                // Fallback sur les valeurs par defaut passees en parametre
+                $sslVerify = false;
+                $proxy = null;
+                $proxyAuth = '';
+            }
+        } else {
+            $sslVerify = false;
+            $proxy = null;
+            $proxyAuth = '';
+        }
+
         $this->concurrence = $concurrence;
         $this->timeout = $timeout;
         $this->delaiMs = $delaiMs;
@@ -45,14 +68,27 @@ class VerificateurHttp
             $headersSupplementaires,
         );
 
-        $this->client = new Client([
+        $clientOptions = [
             'timeout' => $this->timeout,
             'connect_timeout' => $this->timeout,
             'allow_redirects' => $redirectConfig,
             'http_errors' => false,
-            'verify' => false,
+            'verify' => $sslVerify,
             'headers' => $headers,
-        ]);
+        ];
+
+        if ($proxy !== null) {
+            $proxyConfig = $proxy;
+            if ($proxyAuth !== '') {
+                // Inserer auth dans l'URL du proxy (user:pass@host:port)
+                $parties = parse_url($proxy);
+                $proxyConfig = ($parties['scheme'] ?? 'http') . '://' . $proxyAuth . '@'
+                    . ($parties['host'] ?? '') . (isset($parties['port']) ? ':' . $parties['port'] : '');
+            }
+            $clientOptions['proxy'] = $proxyConfig;
+        }
+
+        $this->client = new Client($clientOptions);
     }
 
     public function setCallbackProgression(callable $callback): void
