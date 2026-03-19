@@ -57,5 +57,9 @@
             "method": "GET",
             "type": "ajax"
         }
-    ]
+    ],
+    "credits_par_analyse": 1,
+    "units_per_credit": 50,
+    "unit_label": "URLs",
+    "daily_limit": 1000
 }
