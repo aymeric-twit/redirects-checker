@@ -30,12 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Quota plateforme
+// Quota plateforme : vérification préalable (le décompte réel se fait après parsing)
 if (class_exists('\\Platform\\Module\\Quota')) {
-    $slug = 'redirects-checker';
-    if (!\Platform\Module\Quota::trackerSiDisponible($slug)) {
+    if (!\Platform\Module\Quota::creditsDisponibles('redirects-checker')) {
         http_response_code(429);
-        echo json_encode(['erreur' => 'Quota mensuel epuise.']);
+        echo json_encode(['erreur' => 'Quota epuise.']);
         exit;
     }
 }
@@ -116,6 +115,16 @@ if (count($resultatParsing['paires']) > $maxRedirections) {
         'erreur' => 'Trop de redirections (' . number_format(count($resultatParsing['paires']), 0, ',', ' ') . '). Maximum autorise : ' . number_format($maxRedirections, 0, ',', ' ') . '.',
     ]);
     exit;
+}
+
+// Décompter les crédits proportionnellement au nombre d'URLs
+if (class_exists('\\Platform\\Module\\Quota')) {
+    $nbUrls = count($resultatParsing['paires']);
+    if (!\\Platform\\Module\\Quota::trackerSiDisponible('redirects-checker', $nbUrls)) {
+        http_response_code(429);
+        echo json_encode(['erreur' => 'Crédits insuffisants pour ' . $nbUrls . ' URLs.']);
+        exit;
+    }
 }
 
 if (empty($resultatParsing['paires'])) {
