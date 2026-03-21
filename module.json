@@ -7,8 +7,9 @@
     "illustration": "illustration.svg",
     "entry_point": "index.php",
     "sort_order": 55,
-    "quota_mode": "form_submit",
-    "default_quota": 1000,
+    "quota_mode": "url",
+    "default_quota": 50000,
+    "unite_label": "URLs",
     "display_mode": "embedded",
     "env_keys": [],
     "languages": [
@@ -59,5 +60,6 @@
     ],
     "credits_par_analyse": 1,
     "units_per_credit": 50,
-    "periode_quota": "jour"
+    "periode_quota": "jour",
+    "unites_par_credit": 100
 }

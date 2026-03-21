@@ -72,9 +72,11 @@ if (!file_exists($dataHtaccess)) {
     <div class="row">
     <div class="col-lg-8">
     <div class="card shadow-sm mb-4 border-top-0 rounded-top-0">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0 fw-bold" data-i18n="form.titreImport"><i class="bi bi-upload me-2"></i>Importer les redirections</h5>
+            <button type="button" class="config-toggle" data-bs-toggle="collapse" data-bs-target="#configBody" aria-expanded="true"><i class="bi bi-chevron-down"></i></button>
         </div>
+        <div class="collapse show" id="configBody">
         <div class="card-body">
             <form method="POST" action="" enctype="multipart/form-data" id="analyseForm">
 
@@ -240,6 +242,7 @@ if (!file_exists($dataHtaccess)) {
                     <i class="bi bi-play-fill me-1"></i>Analyser les redirections
                 </button>
             </form>
+        </div>
         </div>
     </div>
     </div><!-- /col-lg-8 formulaire -->
