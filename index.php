@@ -115,8 +115,7 @@ if (!file_exists($dataHtaccess)) {
 
                 <div class="row mb-3">
                     <div class="col-md-4">
-                    <div id="platformCreditsSlot"></div>
-                        <label for="separateur" class="form-label fw-semibold" data-i18n="form.labelSeparateur">Separateur</label>
+                                            <label for="separateur" class="form-label fw-semibold" data-i18n="form.labelSeparateur">Separateur</label>
                         <select class="form-select" id="separateur" name="separateur">
                             <option value="auto" selected data-i18n="form.autoDetection">Auto-detection</option>
                             <option value="&#9;" data-i18n="form.tabulation">Tabulation</option>
@@ -246,6 +245,7 @@ if (!file_exists($dataHtaccess)) {
     </div><!-- /col-lg-8 formulaire -->
 
     <div class="col-lg-4" id="helpPanel">
+        <div id="platformCreditsSlot"></div>
         <div class="config-help-panel">
             <div class="help-title mb-2" data-i18n="help.titre_comment">
                 <i class="bi bi-info-circle me-1"></i> Comment ca marche
