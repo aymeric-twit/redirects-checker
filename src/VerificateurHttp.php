@@ -32,27 +32,31 @@ class VerificateurHttp
         int $delaiMs = 0,
         array $headersSupplementaires = [],
     ) {
-        // Mode plateforme : lire la configuration centralisee
+        // Mode plateforme : lire la configuration centralisee + headers anti-blocage
         if (defined('PLATFORM_EMBEDDED') && class_exists(\Platform\Http\HttpConfig::class)) {
             try {
                 $config = \Platform\Http\HttpConfig::charger();
-                $userAgent = $config->webUserAgent;
                 $timeout = $config->webTimeout;
                 $sslVerify = $config->webSslVerify;
                 $proxy = ($config->proxyEnabled && $config->proxyWeb && $config->proxyUrl !== '')
                     ? $config->proxyUrl
                     : null;
                 $proxyAuth = $config->proxyAuth;
+                // Headers anti-blocage enrichis (rotation UA, Accept-Language, Sec-Ch-Ua, etc.)
+                $crawlerHeaders = class_exists(\Platform\Http\WebClient::class)
+                    ? \Platform\Http\WebClient::construireHeadersCrawler()
+                    : ['User-Agent' => $config->webUserAgent];
             } catch (\Throwable) {
-                // Fallback sur les valeurs par defaut passees en parametre
                 $sslVerify = false;
                 $proxy = null;
                 $proxyAuth = '';
+                $crawlerHeaders = ['User-Agent' => $userAgent];
             }
         } else {
             $sslVerify = false;
             $proxy = null;
             $proxyAuth = '';
+            $crawlerHeaders = ['User-Agent' => $userAgent];
         }
 
         $this->concurrence = $concurrence;
@@ -64,7 +68,7 @@ class VerificateurHttp
             : false;
 
         $headers = array_merge(
-            ['User-Agent' => $userAgent],
+            $crawlerHeaders,
             $headersSupplementaires,
         );
 
