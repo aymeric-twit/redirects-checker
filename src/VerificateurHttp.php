@@ -118,6 +118,15 @@ class VerificateurHttp
         $aRetenterEnGet = [];
         $total = count($urls);
 
+        // Service Go : batch concurrent avec TLS fingerprinting
+        if (defined('PLATFORM_EMBEDDED') && class_exists('\\Platform\\Http\\HttpConfig')) {
+            $config = \Platform\Http\HttpConfig::charger();
+            if ($config->crawlerGoServiceUrl !== '') {
+                return $this->verifierViaGoService($urls, $config);
+            }
+        }
+
+        // Fallback : Guzzle Pool
         // Phase 1 : HEAD
         $this->executerPool($urls, 'HEAD', $resultats, $verifiees, $total, $aRetenterEnGet);
 
@@ -230,6 +239,153 @@ class VerificateurHttp
         ]);
 
         $pool->promise()->wait();
+    }
+
+    /**
+     * Verifie les URLs via le service Go crawl-proxy (batch concurrent + TLS fingerprinting).
+     *
+     * @param string[] $urls
+     * @return array<string, array{statut: int|null, erreur: string|null, tempsMs: int, urlFinale: string|null, chaineRedirections: array}>
+     */
+    private function verifierViaGoService(array $urls, \Platform\Http\HttpConfig $config): array
+    {
+        $serviceUrl = rtrim($config->crawlerGoServiceUrl, '/') . '/fetch-batch';
+        $headers = class_exists('\\Platform\\Http\\WebClient')
+            ? \Platform\Http\WebClient::construireHeadersCrawler()
+            : ['User-Agent' => $config->webUserAgent];
+
+        $resultats = [];
+        $total = count($urls);
+        $verifiees = 0;
+
+        // Filtrer les URLs valides
+        $urlsValides = array_filter($urls, fn(string $u): bool => $this->estUrlValide($u));
+
+        // Phase 1 : HEAD en batch
+        $aRetenterEnGet = [];
+        $batches = array_chunk($urlsValides, 500);
+
+        foreach ($batches as $batch) {
+            $requests = array_map(fn(string $url): array => [
+                'url'              => $url,
+                'method'           => 'HEAD',
+                'timeout'          => $this->timeout,
+                'tls_profile'      => $config->crawlerProfilTls,
+                'follow_redirects' => true,
+                'max_redirects'    => 10,
+                'headers'          => $headers,
+            ], $batch);
+
+            $reponses = $this->envoyerBatchGo($serviceUrl, $config->crawlerGoServiceToken, $requests);
+
+            foreach ($reponses as $i => $resp) {
+                $url = $batch[$i] ?? '';
+                $statut = (int) ($resp['status_code'] ?? 0);
+
+                if ($statut === 403 || $statut === 405) {
+                    $aRetenterEnGet[] = $url;
+                    continue;
+                }
+
+                $resultats[$url] = [
+                    'statut'              => $statut > 0 ? $statut : null,
+                    'erreur'              => ($resp['error'] ?? '') !== '' ? $resp['error'] : null,
+                    'tempsMs'             => (int) ($resp['timings']['total_ms'] ?? 0),
+                    'urlFinale'           => ($resp['url_finale'] ?? '') !== '' && $resp['url_finale'] !== $url ? $resp['url_finale'] : null,
+                    'chaineRedirections'  => [],
+                ];
+                $this->notifierResultat($url, $resultats[$url]);
+                $verifiees++;
+                $this->notifierProgression($verifiees, $total);
+            }
+        }
+
+        // Phase 2 : GET fallback pour les 403/405
+        if (!empty($aRetenterEnGet)) {
+            $batchesGet = array_chunk($aRetenterEnGet, 500);
+            foreach ($batchesGet as $batch) {
+                $requests = array_map(fn(string $url): array => [
+                    'url'              => $url,
+                    'method'           => 'GET',
+                    'timeout'          => $this->timeout,
+                    'tls_profile'      => $config->crawlerProfilTls,
+                    'follow_redirects' => true,
+                    'max_redirects'    => 10,
+                    'max_size_bytes'   => 1024,
+                    'headers'          => $headers,
+                ], $batch);
+
+                $reponses = $this->envoyerBatchGo($serviceUrl, $config->crawlerGoServiceToken, $requests);
+
+                foreach ($reponses as $i => $resp) {
+                    $url = $batch[$i] ?? '';
+                    $statut = (int) ($resp['status_code'] ?? 0);
+                    $resultats[$url] = [
+                        'statut'              => $statut > 0 ? $statut : null,
+                        'erreur'              => ($resp['error'] ?? '') !== '' ? $resp['error'] : null,
+                        'tempsMs'             => (int) ($resp['timings']['total_ms'] ?? 0),
+                        'urlFinale'           => ($resp['url_finale'] ?? '') !== '' && $resp['url_finale'] !== $url ? $resp['url_finale'] : null,
+                        'chaineRedirections'  => [],
+                    ];
+                    $this->notifierResultat($url, $resultats[$url]);
+                    $verifiees++;
+                    $this->notifierProgression($verifiees, $total);
+                }
+            }
+        }
+
+        // Marquer les URLs invalides
+        foreach ($urls as $url) {
+            if (!isset($resultats[$url])) {
+                $resultats[$url] = [
+                    'statut'              => null,
+                    'erreur'              => 'URL invalide ou IP privee',
+                    'tempsMs'             => 0,
+                    'urlFinale'           => null,
+                    'chaineRedirections'  => [],
+                ];
+            }
+        }
+
+        return $resultats;
+    }
+
+    /**
+     * Envoie un batch de requetes au service Go crawl-proxy.
+     *
+     * @param array<int, array<string, mixed>> $requests
+     * @return array<int, array<string, mixed>>
+     */
+    private function envoyerBatchGo(string $serviceUrl, string $token, array $requests): array
+    {
+        $payload = json_encode([
+            'requests'    => $requests,
+            'concurrency' => $this->concurrence,
+        ], JSON_UNESCAPED_UNICODE);
+
+        $ch = curl_init($serviceUrl);
+        $curlHeaders = ['Content-Type: application/json'];
+        if ($token !== '') {
+            $curlHeaders[] = 'Authorization: Bearer ' . $token;
+        }
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POSTFIELDS     => $payload,
+            CURLOPT_HTTPHEADER     => $curlHeaders,
+            CURLOPT_TIMEOUT        => ($this->timeout * count($requests) / max(1, $this->concurrence)) + 30,
+            CURLOPT_CONNECTTIMEOUT => 5,
+        ]);
+
+        $resultat = curl_exec($ch);
+        curl_close($ch);
+
+        if ($resultat === false) {
+            return [];
+        }
+
+        $data = json_decode($resultat, true);
+        return $data['results'] ?? [];
     }
 
     /**
